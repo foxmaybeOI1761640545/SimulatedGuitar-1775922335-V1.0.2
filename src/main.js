@@ -1,362 +1,90 @@
 import * as Tone from "tone";
 import { Soundfont } from "smplr";
-import "./style.css";
-import { DEFAULT_LANGUAGE, LANGUAGE_EN_US, LANGUAGE_ZH_CN, formatKeyLabel, normalizeLanguage, translate } from "./i18n";
-
-const CHORD_LIBRARY = {
-  // Core triads
-  C: ["C3", "E3", "G3", "C4", "E4", "G4"],
-  Cm: ["C3", "Eb3", "G3", "C4", "Eb4", "G4"],
-  Caug: ["C3", "E3", "G#3", "C4", "E4", "G#4"],
-  Cdim: ["C3", "Eb3", "Gb3", "C4", "Eb4", "Gb4"],
-  D: ["D3", "A3", "D4", "F#4", "A4", "D5"],
-  Dm: ["D3", "A3", "D4", "F4", "A4", "D5"],
-  E: ["E2", "B2", "E3", "G#3", "B3", "E4"],
-  Em: ["E2", "B2", "E3", "G3", "B3", "E4"],
-  F: ["F2", "C3", "F3", "A3", "C4", "F4"],
-  Fm: ["F2", "C3", "F3", "Ab3", "C4", "F4"],
-  G: ["G2", "B2", "D3", "G3", "B3", "G4"],
-  Gm: ["G2", "Bb2", "D3", "G3", "Bb3", "G4"],
-  A: ["A2", "E3", "A3", "C#4", "E4", "A4"],
-  Am: ["A2", "E3", "A3", "C4", "E4", "A4"],
-  B: ["B2", "F#3", "B3", "D#4", "F#4", "B4"],
-  Bm: ["B2", "F#3", "B3", "D4", "F#4", "B4"],
-  Bdim: ["B2", "F3", "B3", "D4", "F4", "B4"],
-
-  // Sevenths
-  Cmaj7: ["C3", "E3", "G3", "B3", "E4", "G4"],
-  C7: ["C3", "E3", "G3", "Bb3", "E4", "G4"],
-  Cm7: ["C3", "Eb3", "G3", "Bb3", "Eb4", "G4"],
-  Dmaj7: ["D3", "A3", "C#4", "F#4", "A4", "D5"],
-  D7: ["D3", "A3", "C4", "F#4", "A4", "D5"],
-  Dm7: ["D3", "A3", "C4", "F4", "A4", "D5"],
-  Em7: ["E2", "B2", "D3", "G3", "B3", "E4"],
-  E7: ["E2", "B2", "D3", "G#3", "B3", "E4"],
-  Fmaj7: ["F2", "C3", "E3", "A3", "C4", "F4"],
-  F7: ["F2", "C3", "Eb3", "A3", "C4", "F4"],
-  Fm7: ["F2", "C3", "Eb3", "Ab3", "C4", "F4"],
-  Gmaj7: ["G2", "B2", "D3", "F#3", "B3", "G4"],
-  G7: ["G2", "B2", "D3", "F3", "B3", "G4"],
-  Gm7: ["G2", "Bb2", "D3", "F3", "Bb3", "G4"],
-  Am7: ["A2", "E3", "G3", "C4", "E4", "A4"],
-  A7: ["A2", "E3", "G3", "C#4", "E4", "A4"],
-  Bm7: ["B2", "F#3", "A3", "D4", "F#4", "B4"],
-  B7: ["B2", "F#3", "A3", "D#4", "F#4", "B4"],
-  Bm7b5: ["B2", "F3", "A3", "D4", "F4", "B4"],
-
-  // Add/sus colors
-  Cadd9: ["C3", "E3", "G3", "D4", "E4", "G4"],
-  Csus2: ["C3", "D3", "G3", "C4", "D4", "G4"],
-  Csus4: ["C3", "F3", "G3", "C4", "F4", "G4"],
-  Dadd9: ["D3", "A3", "D4", "E4", "A4", "D5"],
-  Dsus2: ["D3", "A3", "D4", "E4", "A4", "D5"],
-  Dsus4: ["D3", "A3", "D4", "G4", "A4", "D5"],
-  Eadd9: ["E2", "B2", "F#3", "G#3", "B3", "E4"],
-  Esus4: ["E2", "B2", "E3", "A3", "B3", "E4"],
-  Fadd9: ["F2", "C3", "G3", "A3", "C4", "F4"],
-  Fsus2: ["F2", "C3", "F3", "G3", "C4", "F4"],
-  Gadd9: ["G2", "B2", "D3", "A3", "B3", "G4"],
-  Gsus2: ["G2", "D3", "G3", "A3", "D4", "G4"],
-  Gsus4: ["G2", "C3", "D3", "G3", "C4", "G4"],
-  Aadd9: ["A2", "E3", "B3", "C#4", "E4", "A4"],
-  Asus2: ["A2", "E3", "A3", "B3", "E4", "A4"],
-  Asus4: ["A2", "E3", "A3", "D4", "E4", "A4"],
-
-  // Slash chords and common passing voicings
-  "D/#F": ["F#2", "A2", "D3", "F#3", "A3", "D4"],
-  "C/E": ["E2", "G2", "C3", "E3", "G3", "C4"],
-  "G/B": ["B2", "D3", "G3", "B3", "D4", "G4"],
-  "F/C": ["C3", "F3", "A3", "C4", "F4", "A4"],
-  "Am/C": ["C3", "E3", "A3", "C4", "E4", "A4"]
-};
-const CHORD_LIBRARY_LOOKUP = createChordLibraryLookup();
-
-const DEFAULT_SEQUENCE = ["C", "G", "Am", "F", "Dm", "Em", "E", "A"];
-const DEFAULT_KEY_SIGNATURE = "C";
-const AVAILABLE_KEY_SIGNATURES = ["C", "G", "D", "A", "E", "B", "F#", "Db", "Ab", "Eb", "Bb", "F"];
-const CHORD_VOICING_MODE_TRANSPOSE = "transpose";
-const CHORD_VOICING_MODE_GUITAR = "guitar";
-const DEFAULT_CHORD_VOICING_MODE = CHORD_VOICING_MODE_TRANSPOSE;
-const AVAILABLE_CHORD_VOICING_MODES = [
+import "./assets/styles/style.css";
+import {
+  ARPEGGIO_LOOKAHEAD_SECONDS,
+  ARPEGGIO_NOTE_RATIO,
+  ARPEGGIO_PATTERNS,
+  ARPEGGIO_PATTERN_BY_ID,
+  ARPEGGIO_TOGGLE_KEY,
+  AVAILABLE_CHORD_VOICING_MODES,
+  AVAILABLE_KEY_SIGNATURES,
+  CHORD_LIBRARY,
+  CHORD_VOICING_MODE_GUITAR,
   CHORD_VOICING_MODE_TRANSPOSE,
-  CHORD_VOICING_MODE_GUITAR
-];
-const TONE_PRESET_ENGINE_SOUNDFONT = "soundfont";
-const TONE_PRESET_ENGINE_PLUCK = "pluck";
-const DEFAULT_TONE_PRESET_ID = "acoustic_steel";
-const DEFAULT_PLUCK_PROFILE = {
-  attackNoiseBase: 1.05,
-  attackNoiseStep: 0.05,
-  dampeningBase: 2400,
-  dampeningStep: 260,
-  resonanceBase: 0.95,
-  resonanceStep: 0.005,
-  panSpread: 3
-};
-const TONE_PRESETS = [
-  {
-    id: "acoustic_steel",
-    labelKey: "tonePresetAcousticSteel",
-    engine: TONE_PRESET_ENGINE_SOUNDFONT,
-    instrument: "acoustic_guitar_steel"
-  },
-  {
-    id: "acoustic_nylon",
-    labelKey: "tonePresetAcousticNylon",
-    engine: TONE_PRESET_ENGINE_SOUNDFONT,
-    instrument: "acoustic_guitar_nylon"
-  },
-  {
-    id: "electric_clean",
-    labelKey: "tonePresetElectricClean",
-    engine: TONE_PRESET_ENGINE_SOUNDFONT,
-    instrument: "electric_guitar_clean"
-  },
-  {
-    id: "electric_jazz",
-    labelKey: "tonePresetElectricJazz",
-    engine: TONE_PRESET_ENGINE_SOUNDFONT,
-    instrument: "electric_guitar_jazz"
-  },
-  {
-    id: "pluck_bright",
-    labelKey: "tonePresetPluckBright",
-    engine: TONE_PRESET_ENGINE_PLUCK,
-    pluckProfile: {
-      attackNoiseBase: 1.18,
-      attackNoiseStep: 0.055,
-      dampeningBase: 2050,
-      dampeningStep: 240,
-      resonanceBase: 0.96,
-      resonanceStep: 0.004,
-      panSpread: 2.6
-    }
-  },
-  {
-    id: "pluck_warm",
-    labelKey: "tonePresetPluckWarm",
-    engine: TONE_PRESET_ENGINE_PLUCK,
-    pluckProfile: {
-      attackNoiseBase: 0.92,
-      attackNoiseStep: 0.035,
-      dampeningBase: 2800,
-      dampeningStep: 290,
-      resonanceBase: 0.94,
-      resonanceStep: 0.003,
-      panSpread: 3.4
-    }
-  }
-];
-const TONE_PRESET_BY_ID = new Map(TONE_PRESETS.map((preset) => [preset.id, preset]));
-const FLAT_KEY_SIGNATURES = new Set(["F", "Bb", "Eb", "Ab", "Db", "Gb", "Cb"]);
-const PITCH_CLASS_TO_SEMITONE = {
-  C: 0,
-  "B#": 0,
-  "C#": 1,
-  Db: 1,
-  D: 2,
-  "D#": 3,
-  Eb: 3,
-  E: 4,
-  Fb: 4,
-  F: 5,
-  "E#": 5,
-  "F#": 6,
-  Gb: 6,
-  G: 7,
-  "G#": 8,
-  Ab: 8,
-  A: 9,
-  "A#": 10,
-  Bb: 10,
-  B: 11,
-  Cb: 11
-};
-const SEMITONE_TO_SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-const SEMITONE_TO_FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
-const STRING_ORDER = [6, 5, 4, 3, 2, 1];
-const DISPLAY_STRING_ORDER = [1, 2, 3, 4, 5, 6];
-const DEFAULT_STRING_KEYS = {
-  6: "n",
-  5: "m",
-  4: "k",
-  3: "j",
-  2: "i",
-  1: "o"
-};
+  DEFAULT_ARPEGGIO_PAUSE_IMMEDIATE,
+  DEFAULT_ARPEGGIO_PATTERN_ID,
+  DEFAULT_ARPEGGIO_STEP_MS,
+  DEFAULT_ARPEGGIO_VISIBLE_PATTERN_IDS,
+  DEFAULT_CHORD_VOICING_MODE,
+  DEFAULT_CYCLE_KEY,
+  DEFAULT_KEY_SIGNATURE,
+  DEFAULT_PLUCK_PROFILE,
+  DEFAULT_SEQUENCE,
+  DEFAULT_STRING_HIGHLIGHT_DURATION_MS,
+  DEFAULT_STRING_HOLD_DELAY_MS,
+  DEFAULT_STRING_HOLD_DELAY_OVERRIDES_MS,
+  DEFAULT_STRING_KEY_BY_CODE,
+  DEFAULT_STRING_KEYS,
+  DEFAULT_STRUM_HOLD_DELAY_MS,
+  DEFAULT_TONE_PRESET_ID,
+  DISPLAY_STRING_ORDER,
+  FLAT_KEY_SIGNATURES,
+  HOLD_REPEAT_INTERVAL_MS,
+  MAX_ARPEGGIO_STEP_MS,
+  MAX_STRING_HOLD_DELAY_MS,
+  MAX_STRUM_HOLD_DELAY_MS,
+  MIN_ARPEGGIO_STEP_MS,
+  MIN_STRING_HOLD_DELAY_MS,
+  MIN_STRUM_HOLD_DELAY_MS,
+  MOBILE_PLAY_LAYOUT_QUERY,
+  NEUTRAL_PREVIEW_STRING_NOTES,
+  PREVIEW_BEAT_DURATION_MS,
+  PREVIEW_LOCK_TAIL_MS,
+  PREVIEW_PLUCK_RELEASE_RATIO,
+  PREVIEW_SINGLE_NOTE_DURATION_SECONDS,
+  PREVIEW_SINGLE_STRING_PASS_DURATION_MS,
+  PREVIEW_SINGLE_STRING_STEP_DELAY_MS,
+  PREVIEW_STRUM_HIGHLIGHT_DURATION_MS,
+  PREVIEW_STRUM_NOTE_DURATION_SECONDS,
+  PREVIEW_STRUM_PASS_DURATION_MS,
+  PREVIEW_STRUM_STEP_DELAY_MS,
+  PREVIEW_STRUM_TRANSITION_GAP_MS,
+  PREVIEW_TOTAL_DURATION_MS,
+  ROUTE_PLAY,
+  ROUTE_SETTINGS,
+  STRING_ORDER,
+  STRUM_DOWN_KEY,
+  STRUM_REPEAT_INTERVAL_MS,
+  STRUM_STEP_DELAY_MS,
+  STRUM_UP_KEY,
+  SWIPE_SWEEP_STEP_DELAY_MS,
+  TONE_PRESETS,
+  TONE_PRESET_BY_ID,
+  TONE_PRESET_ENGINE_PLUCK,
+  TONE_PRESET_ENGINE_SOUNDFONT
+} from "./config";
+import { LANGUAGE_EN_US, LANGUAGE_ZH_CN, formatKeyLabel, normalizeLanguage, translate } from "./i18n";
+import { bootstrapHashRoute, getHashRoute, updateBodyRouteClass } from "./router/hashRouter";
+import { findChordIdByDisplaySymbol, getPitchClassSemitone, transposeChordSymbol, transposeNote } from "./services/chordService";
+import { loadSettingsFromStorage, saveSettingsToStorage } from "./services/settingsStorage";
+import { createAppState, createRuntimeCollections } from "./stores/appState";
+import { isTextInput, normalizeKey } from "./utils/input";
+import { normalizeDelayMs } from "./utils/number";
+import { renderStringBoardRows } from "./components/stringBoard";
+import { renderPlayView } from "./views/playView";
+import { renderSettingsView } from "./views/settingsView";
 
-const DEFAULT_CYCLE_KEY = "a";
-const STRUM_DOWN_KEY = "l";
-const STRUM_UP_KEY = "p";
-const ARPEGGIO_TOGGLE_KEY = "r";
-
-const ARPEGGIO_PATTERNS = [
-  {
-    id: "flow_8",
-    labelKey: "arpeggioPatternFlow8",
-    sequence: [6, 4, 3, 2, 3, 4, 2, 1]
-  },
-  {
-    id: "pima_8",
-    labelKey: "arpeggioPatternPima8",
-    sequence: [6, 3, 2, 1, 2, 3, 2, 1]
-  },
-  {
-    id: "alternate_8",
-    labelKey: "arpeggioPatternAlternate8",
-    sequence: [6, 5, 4, 3, 2, 1, 2, 3]
-  },
-  {
-    id: "waltz_6",
-    labelKey: "arpeggioPatternWaltz6",
-    sequence: [6, 3, 2, 3, 1, 3]
-  },
-  {
-    id: "bass_roll_8",
-    labelKey: "arpeggioPatternBassRoll8",
-    sequence: [6, 3, 2, 1, 5, 3, 2, 1]
-  },
-  {
-    id: "travis_8",
-    labelKey: "arpeggioPatternTravis8",
-    sequence: [6, 3, 4, 2, 5, 3, 4, 1]
-  },
-  {
-    id: "folk_pop_8",
-    labelKey: "arpeggioPatternFolkPop8",
-    sequence: [6, 4, 3, 2, 4, 3, 2, 1]
-  },
-  {
-    id: "pedal_high_8",
-    labelKey: "arpeggioPatternPedalHigh8",
-    sequence: [6, 2, 3, 2, 5, 2, 3, 1]
-  },
-  {
-    id: "cross_8",
-    labelKey: "arpeggioPatternCross8",
-    sequence: [6, 3, 5, 2, 4, 2, 3, 1]
-  },
-  {
-    id: "wave_12",
-    labelKey: "arpeggioPatternWave12",
-    sequence: [6, 4, 3, 2, 1, 2, 3, 4, 5, 4, 3, 2]
-  },
-  {
-    id: "ballad_16",
-    labelKey: "arpeggioPatternBallad16",
-    sequence: [6, 3, 2, 1, 3, 2, 4, 2, 5, 3, 2, 1, 3, 2, 4, 2]
-  }
-];
-const ARPEGGIO_PATTERN_BY_ID = new Map(ARPEGGIO_PATTERNS.map((pattern) => [pattern.id, pattern]));
-const DEFAULT_ARPEGGIO_PATTERN_ID = ARPEGGIO_PATTERNS[0].id;
-const DEFAULT_ARPEGGIO_VISIBLE_PATTERN_IDS = [
-  "flow_8",
-  "pima_8",
-  "alternate_8",
-  "waltz_6",
-  "bass_roll_8",
-  "travis_8"
-];
-const DEFAULT_ARPEGGIO_STEP_MS = 120;
-const DEFAULT_ARPEGGIO_PAUSE_IMMEDIATE = false;
-const MIN_ARPEGGIO_STEP_MS = 70;
-const MAX_ARPEGGIO_STEP_MS = 420;
-const ARPEGGIO_NOTE_RATIO = 0.82;
-const ARPEGGIO_LOOKAHEAD_SECONDS = 0.02;
-
-const HOLD_REPEAT_INTERVAL_MS = 110;
-const DEFAULT_STRUM_HOLD_DELAY_MS = 320;
-const DEFAULT_STRING_HOLD_DELAY_MS = 0;
-const STRUM_REPEAT_INTERVAL_MS = 320;
-const STRUM_STEP_DELAY_MS = 24;
-const DEFAULT_STRING_HIGHLIGHT_DURATION_MS = 180;
-const PREVIEW_BEAT_DURATION_MS = 800;
-const PREVIEW_SINGLE_STRING_PASS_DURATION_MS = PREVIEW_BEAT_DURATION_MS * STRING_ORDER.length;
-const PREVIEW_STRUM_PASS_DURATION_MS = PREVIEW_BEAT_DURATION_MS;
-const PREVIEW_STRUM_TRANSITION_GAP_MS = PREVIEW_BEAT_DURATION_MS;
-const PREVIEW_TOTAL_DURATION_MS =
-  PREVIEW_SINGLE_STRING_PASS_DURATION_MS +
-  PREVIEW_STRUM_PASS_DURATION_MS * 2 +
-  PREVIEW_STRUM_TRANSITION_GAP_MS;
-const PREVIEW_SINGLE_STRING_STEP_DELAY_MS = PREVIEW_BEAT_DURATION_MS;
-const PREVIEW_STRUM_STEP_DELAY_MS = PREVIEW_BEAT_DURATION_MS / STRING_ORDER.length;
-const PREVIEW_SINGLE_NOTE_DURATION_SECONDS = (PREVIEW_BEAT_DURATION_MS / 1000) * 0.9;
-const PREVIEW_STRUM_NOTE_DURATION_SECONDS = (PREVIEW_STRUM_STEP_DELAY_MS / 1000) * 0.38;
-const PREVIEW_STRUM_HIGHLIGHT_DURATION_MS = 80;
-const PREVIEW_PLUCK_RELEASE_RATIO = 0.32;
-const PREVIEW_LOCK_TAIL_MS = 40;
-const SWIPE_SWEEP_STEP_DELAY_MS = 16;
-const MIN_STRUM_HOLD_DELAY_MS = 0;
-const MAX_STRUM_HOLD_DELAY_MS = 2000;
-const MIN_STRING_HOLD_DELAY_MS = 0;
-const MAX_STRING_HOLD_DELAY_MS = 2000;
-const DEFAULT_STRING_HOLD_DELAY_OVERRIDES_MS = {
-  6: null,
-  5: null,
-  4: null,
-  3: null,
-  2: null,
-  1: null
-};
-const NEUTRAL_PREVIEW_STRING_NOTES = {
-  6: "E2",
-  5: "A2",
-  4: "D3",
-  3: "G3",
-  2: "B3",
-  1: "E4"
-};
-
-const STORAGE_KEY = "simulated-guitar-settings-v1";
-const DEFAULT_STRING_KEY_BY_CODE = {
-  KeyN: 6,
-  KeyM: 5,
-  KeyK: 4,
-  KeyJ: 3,
-  KeyI: 2,
-  KeyO: 1
-};
-
-const ROUTE_PLAY = "#/play";
-const ROUTE_SETTINGS = "#/settings";
-const MOBILE_PLAY_LAYOUT_QUERY = "(max-width: 960px), (max-width: 1366px) and (hover: none) and (pointer: coarse)";
-
-const state = {
-  cycleKey: DEFAULT_CYCLE_KEY,
-  stringKeys: { ...DEFAULT_STRING_KEYS },
-  sequence: [...DEFAULT_SEQUENCE],
-  currentIndex: 0,
-  keySignature: DEFAULT_KEY_SIGNATURE,
-  chordVoicingMode: DEFAULT_CHORD_VOICING_MODE,
-  tonePresetId: DEFAULT_TONE_PRESET_ID,
-  language: DEFAULT_LANGUAGE,
-  arpeggioEnabled: false,
-  arpeggioPatternId: DEFAULT_ARPEGGIO_PATTERN_ID,
-  arpeggioVisiblePatternIds: [...DEFAULT_ARPEGGIO_VISIBLE_PATTERN_IDS],
-  arpeggioStepMs: DEFAULT_ARPEGGIO_STEP_MS,
-  arpeggioPauseImmediate: DEFAULT_ARPEGGIO_PAUSE_IMMEDIATE,
-  leftPanelCollapsed: true,
-  strumHoldDelayMs: DEFAULT_STRUM_HOLD_DELAY_MS,
-  stringHoldDelayMs: DEFAULT_STRING_HOLD_DELAY_MS,
-  stringHoldDelayOverridesMs: { ...DEFAULT_STRING_HOLD_DELAY_OVERRIDES_MS },
-  audioReady: false,
-  instrumentReady: false,
-  instrumentLoadProgress: null,
-  instrumentLoadError: false,
-  previewInProgress: false
-};
-
-const synths = new Map();
-const acousticRouting = {
-  sourceBus: null,
-  dryBus: null,
-  bodySend: null,
-  ambienceSend: null
-};
-const releaseTimers = new Map();
-const holdTimers = new Map();
-const activeKeyHolds = new Map();
-const activePointerHolds = new Map();
+const state = createAppState();
+const {
+  synths,
+  acousticRouting,
+  releaseTimers,
+  holdTimers,
+  activeKeyHolds,
+  activePointerHolds,
+  refs
+} = createRuntimeCollections();
 let toneLoadRequestId = 0;
 let activePreviewRunId = 0;
 let previewUnlockTimerId = null;
@@ -364,7 +92,6 @@ let arpeggioIntervalId = null;
 let arpeggioStepCursor = 0;
 let arpeggioLastChordId = null;
 let arpeggioStopPending = false;
-const refs = {};
 const app = document.querySelector("#app");
 
 if (!app) {
@@ -398,10 +125,11 @@ window.addEventListener(
 );
 
 function bootstrapRoute() {
-  if (location.hash !== ROUTE_PLAY && location.hash !== ROUTE_SETTINGS) {
-    location.hash = ROUTE_PLAY;
-  }
-  renderRoute();
+  bootstrapHashRoute({
+    playRoute: ROUTE_PLAY,
+    settingsRoute: ROUTE_SETTINGS,
+    onRouteChange: renderRoute
+  });
 }
 
 function renderRoute() {
@@ -409,7 +137,7 @@ function renderRoute() {
   clearRefs();
 
   const route = getRoute();
-  updateBodyRouteClass(route);
+  updateBodyRouteClass(document.body, route, ROUTE_PLAY, ROUTE_SETTINGS);
 
   if (route === ROUTE_SETTINGS) {
     renderSettingsPage();
@@ -423,104 +151,31 @@ function renderRoute() {
 function renderPlayPage() {
   ensureValidArpeggioPatternSelection();
   const visiblePatterns = getVisibleArpeggioPatterns();
-  app.innerHTML = `
-    <div class="play-root">
-      <div class="play-frame">
-        <button id="openSettingsBtn" class="menu-button" type="button" aria-label="${t("openSettingsAriaLabel")}">
-          <span></span><span></span><span></span>
-        </button>
-
-        <div class="play-grid play-grid-drawer">
-          <section id="leftColumn" class="left-column">
-            <button id="leftPanelToggleBtn" class="left-panel-toggle-btn mini-btn" type="button"></button>
-            <article class="chord-card">
-              <p class="card-label">${t("currentChordLabel")}</p>
-              <h1 id="currentChordName" class="chord-name">C</h1>
-              <p id="currentChordNotes" class="chord-notes"></p>
-              <p id="playHint" class="play-hint"></p>
-              <p id="audioStatus" class="audio-status"></p>
-              <div class="arpeggio-panel">
-                <p class="arpeggio-title">${t("arpeggioTitle")}</p>
-                <div class="arpeggio-head">
-                  <button id="arpeggioToggleBtn" class="mini-btn" type="button"></button>
-                  <span id="arpeggioStatusText" class="muted-text arpeggio-status"></span>
-                </div>
-                <label class="setting-line arpeggio-line" for="arpeggioPatternSelect">
-                  <span>${t("arpeggioPatternLabel")}</span>
-                  <select id="arpeggioPatternSelect" class="key-input key-select arpeggio-select">
-                    ${visiblePatterns.map((pattern) => `
-                      <option value="${pattern.id}" ${state.arpeggioPatternId === pattern.id ? "selected" : ""}>
-                        ${t(pattern.labelKey)}
-                      </option>
-                    `).join("")}
-                  </select>
-                </label>
-                <label class="setting-line arpeggio-line" for="arpeggioStepInput">
-                  <span>${t("arpeggioStepLabel")}</span>
-                  <input
-                    id="arpeggioStepInput"
-                    class="key-input arpeggio-step-input"
-                    type="number"
-                    min="${MIN_ARPEGGIO_STEP_MS}"
-                    max="${MAX_ARPEGGIO_STEP_MS}"
-                    step="5"
-                    value="${state.arpeggioStepMs}"
-                  />
-                </label>
-                <label class="setting-line arpeggio-line" for="arpeggioImmediatePauseCheckbox">
-                  <span>${t("arpeggioImmediatePauseLabel")}</span>
-                  <input id="arpeggioImmediatePauseCheckbox" type="checkbox" ${state.arpeggioPauseImmediate ? "checked" : ""} />
-                </label>
-                <p class="muted-text">${t("arpeggioHint", { key: `<kbd>${formatKeyLabel(ARPEGGIO_TOGGLE_KEY)}</kbd>` })}</p>
-              </div>
-            </article>
-
-            <div class="cycle-zone">
-              <button id="cycleButton" class="cycle-button" type="button">
-                <span class="cycle-key" id="cycleButtonKey">A</span>
-              </button>
-            </div>
-          </section>
-
-          <section class="strings-panel">
-            <div id="stringBoard" class="string-board"></div>
-          </section>
-        </div>
-      </div>
-    </div>
-  `;
-
-  refs.openSettingsBtn = document.getElementById("openSettingsBtn");
-  refs.currentChordName = document.getElementById("currentChordName");
-  refs.currentChordNotes = document.getElementById("currentChordNotes");
-  refs.playHint = document.getElementById("playHint");
-  refs.audioStatus = document.getElementById("audioStatus");
-  refs.leftColumn = document.getElementById("leftColumn");
-  refs.leftPanelToggleBtn = document.getElementById("leftPanelToggleBtn");
-  refs.arpeggioToggleBtn = document.getElementById("arpeggioToggleBtn");
-  refs.arpeggioStatusText = document.getElementById("arpeggioStatusText");
-  refs.arpeggioPatternSelect = document.getElementById("arpeggioPatternSelect");
-  refs.arpeggioStepInput = document.getElementById("arpeggioStepInput");
-  refs.arpeggioImmediatePauseCheckbox = document.getElementById("arpeggioImmediatePauseCheckbox");
-  refs.cycleButton = document.getElementById("cycleButton");
-  refs.cycleButtonKey = document.getElementById("cycleButtonKey");
-  refs.stringBoard = document.getElementById("stringBoard");
-
-  refs.openSettingsBtn?.addEventListener("click", () => {
-    location.hash = ROUTE_SETTINGS;
+  renderPlayView({
+    root: app,
+    refs,
+    state,
+    visiblePatterns,
+    t,
+    formatKeyLabel,
+    arpeggioToggleKey: ARPEGGIO_TOGGLE_KEY,
+    minArpeggioStepMs: MIN_ARPEGGIO_STEP_MS,
+    maxArpeggioStepMs: MAX_ARPEGGIO_STEP_MS,
+    handlers: {
+      onOpenSettings: () => {
+        location.hash = ROUTE_SETTINGS;
+      },
+      onCycleChord: cycleChord,
+      onToggleLeftPanel: handleLeftPanelToggleClick,
+      onToggleArpeggio: handleArpeggioToggleClick,
+      onArpeggioPatternChange: handleArpeggioPatternChange,
+      onArpeggioStepChange: handleArpeggioStepChange,
+      onArpeggioImmediatePauseChange: handleArpeggioImmediatePauseChange,
+      onStringBoardPointerDown: handleStringBoardPointerDown,
+      onStringBoardPointerMove: handleStringBoardPointerMove,
+      onStringBoardPointerEnd: handleStringBoardPointerEnd
+    }
   });
-  refs.cycleButton?.addEventListener("click", cycleChord);
-  refs.leftPanelToggleBtn?.addEventListener("click", handleLeftPanelToggleClick);
-  refs.arpeggioToggleBtn?.addEventListener("click", handleArpeggioToggleClick);
-  refs.arpeggioPatternSelect?.addEventListener("change", handleArpeggioPatternChange);
-  refs.arpeggioStepInput?.addEventListener("change", handleArpeggioStepChange);
-  refs.arpeggioImmediatePauseCheckbox?.addEventListener("change", handleArpeggioImmediatePauseChange);
-
-  refs.stringBoard?.addEventListener("pointerdown", handleStringBoardPointerDown);
-  refs.stringBoard?.addEventListener("pointermove", handleStringBoardPointerMove);
-  refs.stringBoard?.addEventListener("pointerup", handleStringBoardPointerEnd);
-  refs.stringBoard?.addEventListener("pointercancel", handleStringBoardPointerEnd);
-  refs.stringBoard?.addEventListener("lostpointercapture", handleStringBoardPointerEnd);
 
   renderCurrentChord();
   renderStringBoard();
@@ -531,76 +186,24 @@ function renderPlayPage() {
 }
 
 function renderSettingsPage() {
-  app.innerHTML = `
-    <div class="settings-root">
-      <div class="settings-shell">
-        <header class="settings-header">
-          <button id="backToPlayBtn" class="back-button" type="button">${t("backToPlay")}</button>
-          <h1>${t("settingsTitle")}</h1>
-        </header>
-        <p class="settings-subtitle">${t("settingsSubtitle")}</p>
-
-        <section class="settings-card">
-          <h2>${t("languageTitle")}</h2>
-          <div id="languageSettings"></div>
-        </section>
-
-        <section class="settings-card">
-          <h2>${t("keyTitle")}</h2>
-          <div id="keySettings"></div>
-        </section>
-
-        <section class="settings-card">
-          <h2>${t("chordOrderTitle")}</h2>
-          <ul id="chordOrderList" class="chord-order-list"></ul>
-          <div id="availableChords" class="available-chords"></div>
-        </section>
-
-        <section class="settings-card">
-          <h2>${t("strumControlsTitle")}</h2>
-          <div id="strumSettings"></div>
-        </section>
-
-        <section class="settings-card">
-          <h2>${t("arpeggioLibraryTitle")}</h2>
-          <div id="arpeggioSettings"></div>
-        </section>
-
-        <section class="settings-card">
-          <h2>${t("guideTitle")}</h2>
-          <div id="guideContent" class="guide-content"></div>
-        </section>
-
-        <div class="settings-footer">
-          <button id="resetBtn" class="reset-btn" type="button">${t("resetButton")}</button>
-          <span id="settingMessage" class="setting-message"></span>
-        </div>
-      </div>
-    </div>
-  `;
-
-  refs.backToPlayBtn = document.getElementById("backToPlayBtn");
-  refs.languageSettings = document.getElementById("languageSettings");
-  refs.keySettings = document.getElementById("keySettings");
-  refs.chordOrderList = document.getElementById("chordOrderList");
-  refs.availableChords = document.getElementById("availableChords");
-  refs.strumSettings = document.getElementById("strumSettings");
-  refs.arpeggioSettings = document.getElementById("arpeggioSettings");
-  refs.guideContent = document.getElementById("guideContent");
-  refs.resetBtn = document.getElementById("resetBtn");
-  refs.settingMessage = document.getElementById("settingMessage");
-
-  refs.backToPlayBtn?.addEventListener("click", () => {
-    location.hash = ROUTE_PLAY;
+  renderSettingsView({
+    root: app,
+    refs,
+    t,
+    handlers: {
+      onBackToPlay: () => {
+        location.hash = ROUTE_PLAY;
+      },
+      onLanguageSettingsChange: handleLanguageSettingsChange,
+      onKeySettingsChange: handleKeySettingsChange,
+      onKeySettingsClick: handleKeySettingsClick,
+      onChordOrderClick: handleChordOrderClick,
+      onAvailableChordClick: handleAvailableChordClick,
+      onStrumSettingsChange: handleStrumSettingsChange,
+      onArpeggioSettingsChange: handleArpeggioSettingsChange,
+      onReset: handleReset
+    }
   });
-  refs.languageSettings?.addEventListener("change", handleLanguageSettingsChange);
-  refs.keySettings?.addEventListener("change", handleKeySettingsChange);
-  refs.keySettings?.addEventListener("click", handleKeySettingsClick);
-  refs.chordOrderList?.addEventListener("click", handleChordOrderClick);
-  refs.availableChords?.addEventListener("click", handleAvailableChordClick);
-  refs.strumSettings?.addEventListener("change", handleStrumSettingsChange);
-  refs.arpeggioSettings?.addEventListener("change", handleArpeggioSettingsChange);
-  refs.resetBtn?.addEventListener("click", handleReset);
 
   renderSettingsContent();
 }
@@ -695,17 +298,11 @@ function renderStringBoard() {
   }
 
   const chord = getCurrentChord();
-  refs.stringBoard.innerHTML = DISPLAY_STRING_ORDER.map((stringNo) => {
-    const note = getStringNote(chord, stringNo);
-    const thickness = (1 + stringNo * 0.85).toFixed(2);
-    return `
-      <button class="string-row" type="button" data-string="${stringNo}" style="--string-size:${thickness}px">
-        <span class="string-number">${stringNo}</span>
-        <span class="string-line"></span>
-        <span class="string-note">${note}</span>
-      </button>
-    `;
-  }).join("");
+  refs.stringBoard.innerHTML = renderStringBoardRows({
+    displayStringOrder: DISPLAY_STRING_ORDER,
+    chord,
+    getStringNote
+  });
 }
 
 function renderPlayHint() {
@@ -1577,156 +1174,6 @@ function getTonePreset(presetId) {
 function getTonePresetLabel(presetId) {
   const preset = getTonePreset(presetId);
   return t(preset?.labelKey ?? "tonePresetAcousticSteel");
-}
-
-function getPitchClassSemitone(pitchClass) {
-  return PITCH_CLASS_TO_SEMITONE[pitchClass] ?? null;
-}
-
-function normalizePitchClassToken(token) {
-  if (typeof token !== "string" || !token) {
-    return null;
-  }
-
-  const trimmed = token.trim();
-  if (!trimmed) {
-    return null;
-  }
-
-  if (/^[#b][A-G]$/.test(trimmed)) {
-    return `${trimmed[1]}${trimmed[0]}`;
-  }
-
-  if (/^[A-G](?:#|b)?$/.test(trimmed)) {
-    return trimmed;
-  }
-
-  return null;
-}
-
-function normalizeChordSymbolForLookup(chordSymbol) {
-  if (typeof chordSymbol !== "string" || !chordSymbol) {
-    return null;
-  }
-
-  const [mainPartRaw, bassPartRaw] = chordSymbol.trim().split("/");
-  const rootMatch = /^([A-G](?:#|b)?)(.*)$/.exec(mainPartRaw);
-  if (!rootMatch) {
-    return null;
-  }
-
-  const [, rootPitchClass, suffix] = rootMatch;
-  const normalizedRoot = normalizePitchClassToken(rootPitchClass);
-  if (!normalizedRoot) {
-    return null;
-  }
-
-  let normalized = `${normalizedRoot}${suffix}`;
-  if (typeof bassPartRaw !== "string") {
-    return normalized;
-  }
-
-  const normalizedBass = normalizePitchClassToken(bassPartRaw.trim());
-  normalized += normalizedBass ? `/${normalizedBass}` : `/${bassPartRaw.trim()}`;
-  return normalized;
-}
-
-function createChordLibraryLookup() {
-  const lookup = new Map();
-  Object.keys(CHORD_LIBRARY).forEach((chordId) => {
-    const normalized = normalizeChordSymbolForLookup(chordId);
-    if (!normalized || lookup.has(normalized)) {
-      return;
-    }
-    lookup.set(normalized, chordId);
-  });
-  return lookup;
-}
-
-function findChordIdByDisplaySymbol(chordSymbol) {
-  const normalized = normalizeChordSymbolForLookup(chordSymbol);
-  if (!normalized) {
-    return null;
-  }
-  return CHORD_LIBRARY_LOOKUP.get(normalized) ?? null;
-}
-
-function transposePitchClass(pitchClass, semitoneShift, preferFlats) {
-  const normalizedPitchClass = normalizePitchClassToken(pitchClass);
-  if (!normalizedPitchClass) {
-    return null;
-  }
-
-  const semitone = getPitchClassSemitone(normalizedPitchClass);
-  if (!Number.isInteger(semitone)) {
-    return null;
-  }
-
-  const nextIndex = ((semitone + semitoneShift) % 12 + 12) % 12;
-  const table = preferFlats ? SEMITONE_TO_FLAT : SEMITONE_TO_SHARP;
-  return table[nextIndex];
-}
-
-function transposeChordSymbol(chordSymbol, semitoneShift, preferFlats) {
-  if (typeof chordSymbol !== "string" || !chordSymbol) {
-    return chordSymbol;
-  }
-
-  const [mainPart, bassPartRaw] = chordSymbol.split("/");
-  const rootMatch = /^([A-G](?:#|b)?)(.*)$/.exec(mainPart);
-  if (!rootMatch) {
-    return chordSymbol;
-  }
-
-  const [, rootPitchClass, suffix] = rootMatch;
-  const transposedRoot = transposePitchClass(rootPitchClass, semitoneShift, preferFlats);
-  if (!transposedRoot) {
-    return chordSymbol;
-  }
-
-  let transposedSymbol = `${transposedRoot}${suffix}`;
-  if (typeof bassPartRaw !== "string") {
-    return transposedSymbol;
-  }
-
-  const transposedBass = transposePitchClass(bassPartRaw, semitoneShift, preferFlats);
-  if (transposedBass) {
-    transposedSymbol += `/${transposedBass}`;
-    return transposedSymbol;
-  }
-
-  const normalizedBass = normalizePitchClassToken(bassPartRaw);
-  transposedSymbol += normalizedBass ? `/${normalizedBass}` : `/${bassPartRaw}`;
-  return transposedSymbol;
-}
-
-function transposeNote(noteWithOctave, semitoneShift, preferFlats) {
-  if (typeof noteWithOctave !== "string" || !noteWithOctave) {
-    return null;
-  }
-
-  const match = /^([A-G](?:#|b)?)(-?\d+)$/.exec(noteWithOctave);
-  if (!match) {
-    return null;
-  }
-
-  const [, pitchClass, octaveRaw] = match;
-  const semitone = getPitchClassSemitone(pitchClass);
-  if (!Number.isInteger(semitone)) {
-    return null;
-  }
-
-  const octave = Number(octaveRaw);
-  if (!Number.isInteger(octave)) {
-    return null;
-  }
-
-  const midiValue = (octave + 1) * 12 + semitone;
-  const shiftedMidiValue = midiValue + semitoneShift;
-  const pitchClassIndex = ((shiftedMidiValue % 12) + 12) % 12;
-  const nextOctave = Math.floor(shiftedMidiValue / 12) - 1;
-  const table = preferFlats ? SEMITONE_TO_FLAT : SEMITONE_TO_SHARP;
-  return `${table[pitchClassIndex]}${nextOctave}`;
 }
 
 function getStringAttackVelocity(stringNo) {
@@ -3023,34 +2470,8 @@ function clearSettingMessage() {
   refs.settingMessage.dataset.type = "";
 }
 
-function isTextInput(target) {
-  if (!(target instanceof HTMLElement)) {
-    return false;
-  }
-  const tag = target.tagName;
-  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || target.isContentEditable;
-}
-
-function normalizeKey(key) {
-  if (!key) {
-    return null;
-  }
-  if (key === " ") {
-    return " ";
-  }
-  return key.toLowerCase();
-}
-
 function t(key, params = {}) {
   return translate(state.language, key, params);
-}
-
-function normalizeDelayMs(value, fallback, min, max) {
-  if (!Number.isFinite(value)) {
-    return fallback;
-  }
-  const rounded = Math.round(value);
-  return Math.min(max, Math.max(min, rounded));
 }
 
 function normalizeStrumHoldDelay(value) {
@@ -3072,12 +2493,7 @@ function normalizeStringHoldDelay(value) {
 }
 
 function getRoute() {
-  return location.hash === ROUTE_SETTINGS ? ROUTE_SETTINGS : ROUTE_PLAY;
-}
-
-function updateBodyRouteClass(route) {
-  document.body.classList.toggle("route-play", route === ROUTE_PLAY);
-  document.body.classList.toggle("route-settings", route === ROUTE_SETTINGS);
+  return getHashRoute(location.hash, ROUTE_PLAY, ROUTE_SETTINGS);
 }
 
 function clearRefs() {
@@ -3087,146 +2503,23 @@ function clearRefs() {
 }
 
 function saveSettings() {
-  normalizeSequenceState();
-  ensureValidArpeggioPatternSelection();
-
-  const payload = {
-    cycleKey: state.cycleKey,
-    stringKeys: state.stringKeys,
-    sequence: state.sequence,
-    currentIndex: state.currentIndex,
-    keySignature: state.keySignature,
-    chordVoicingMode: state.chordVoicingMode,
-    tonePresetId: state.tonePresetId,
-    language: state.language,
-    arpeggioEnabled: state.arpeggioEnabled,
-    arpeggioPatternId: state.arpeggioPatternId,
-    arpeggioVisiblePatternIds: state.arpeggioVisiblePatternIds,
-    arpeggioStepMs: state.arpeggioStepMs,
-    arpeggioPauseImmediate: state.arpeggioPauseImmediate,
-    leftPanelCollapsed: state.leftPanelCollapsed,
-    strumHoldDelayMs: state.strumHoldDelayMs,
-    stringHoldDelayMs: state.stringHoldDelayMs,
-    stringHoldDelayOverridesMs: state.stringHoldDelayOverridesMs
-  };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  saveSettingsToStorage(state, {
+    normalizeSequenceState,
+    ensureValidArpeggioPatternSelection
+  });
 }
 
 function loadSettings() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) {
-    return;
-  }
-
-  try {
-    const parsed = JSON.parse(raw);
-
-    if (typeof parsed.cycleKey === "string" && parsed.cycleKey) {
-      const cycleKey = normalizeKey(parsed.cycleKey);
-      if (cycleKey && cycleKey !== STRUM_DOWN_KEY && cycleKey !== STRUM_UP_KEY) {
-        state.cycleKey = cycleKey;
-      }
-    }
-
-    if (parsed.stringKeys && typeof parsed.stringKeys === "object") {
-      for (const stringNo of STRING_ORDER) {
-        const rawKey = parsed.stringKeys[stringNo];
-        if (typeof rawKey !== "string" || !rawKey) {
-          continue;
-        }
-
-        const normalized = normalizeKey(rawKey);
-        if (!normalized || normalized === STRUM_DOWN_KEY || normalized === STRUM_UP_KEY) {
-          continue;
-        }
-        state.stringKeys[stringNo] = normalized;
-      }
-    }
-
-    if (Array.isArray(parsed.sequence)) {
-      const uniqueSequence = parsed.sequence.filter((chord, index, list) => {
-        return CHORD_LIBRARY[chord] && list.indexOf(chord) === index;
-      });
-
-      if (uniqueSequence.length > 0) {
-        state.sequence = uniqueSequence;
-      }
-    }
-
-    if (Number.isInteger(parsed.currentIndex)) {
-      state.currentIndex = Math.max(0, Math.min(parsed.currentIndex, state.sequence.length - 1));
-    }
-
-    if (typeof parsed.keySignature === "string" && parsed.keySignature) {
-      state.keySignature = normalizeKeySignature(parsed.keySignature);
-    }
-
-    if (typeof parsed.chordVoicingMode === "string" && parsed.chordVoicingMode) {
-      state.chordVoicingMode = normalizeChordVoicingMode(parsed.chordVoicingMode);
-    }
-
-    if (typeof parsed.tonePresetId === "string" && parsed.tonePresetId) {
-      state.tonePresetId = normalizeTonePresetId(parsed.tonePresetId);
-    }
-
-    if (typeof parsed.language === "string" && parsed.language) {
-      state.language = normalizeLanguage(parsed.language);
-    }
-
-    if (typeof parsed.arpeggioEnabled === "boolean") {
-      state.arpeggioEnabled = parsed.arpeggioEnabled;
-    }
-
-    if (typeof parsed.arpeggioPatternId === "string" && parsed.arpeggioPatternId) {
-      state.arpeggioPatternId = normalizeArpeggioPatternId(parsed.arpeggioPatternId);
-    }
-
-    if (Array.isArray(parsed.arpeggioVisiblePatternIds)) {
-      state.arpeggioVisiblePatternIds = normalizeArpeggioVisiblePatternIds(parsed.arpeggioVisiblePatternIds);
-    }
-
-    const rawArpeggioStepMs = Number(parsed.arpeggioStepMs);
-    if (Number.isFinite(rawArpeggioStepMs)) {
-      state.arpeggioStepMs = normalizeArpeggioStepMs(rawArpeggioStepMs);
-    }
-
-    if (typeof parsed.arpeggioPauseImmediate === "boolean") {
-      state.arpeggioPauseImmediate = parsed.arpeggioPauseImmediate;
-    }
-
-    if (typeof parsed.leftPanelCollapsed === "boolean") {
-      state.leftPanelCollapsed = parsed.leftPanelCollapsed;
-    }
-
-    const rawStrumHoldDelay = Number(parsed.strumHoldDelayMs);
-    if (Number.isFinite(rawStrumHoldDelay)) {
-      state.strumHoldDelayMs = normalizeStrumHoldDelay(rawStrumHoldDelay);
-    }
-
-    const rawStringHoldDelay = Number(parsed.stringHoldDelayMs);
-    if (Number.isFinite(rawStringHoldDelay)) {
-      state.stringHoldDelayMs = normalizeStringHoldDelay(rawStringHoldDelay);
-    }
-
-    if (parsed.stringHoldDelayOverridesMs && typeof parsed.stringHoldDelayOverridesMs === "object") {
-      for (const stringNo of STRING_ORDER) {
-        const rawOverride = parsed.stringHoldDelayOverridesMs[stringNo];
-        if (rawOverride === null || typeof rawOverride === "undefined" || rawOverride === "") {
-          state.stringHoldDelayOverridesMs[stringNo] = null;
-          continue;
-        }
-
-        const overrideDelay = Number(rawOverride);
-        if (!Number.isFinite(overrideDelay)) {
-          continue;
-        }
-        state.stringHoldDelayOverridesMs[stringNo] = normalizeStringHoldDelay(overrideDelay);
-      }
-    }
-
-    normalizeSequenceState();
-    ensureValidArpeggioPatternSelection();
-  } catch {
-    localStorage.removeItem(STORAGE_KEY);
-  }
+  loadSettingsFromStorage(state, {
+    normalizeKeySignature,
+    normalizeChordVoicingMode,
+    normalizeTonePresetId,
+    normalizeArpeggioPatternId,
+    normalizeArpeggioVisiblePatternIds,
+    normalizeArpeggioStepMs,
+    normalizeStrumHoldDelay,
+    normalizeStringHoldDelay,
+    normalizeSequenceState,
+    ensureValidArpeggioPatternSelection
+  });
 }
