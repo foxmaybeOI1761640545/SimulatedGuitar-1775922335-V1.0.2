@@ -1,0 +1,1407 @@
+:root {
+  --ink: #141414;
+  --paper: #ececec;
+  --panel: #f6f6f6;
+  --line: #232323;
+  --muted: #5c5c5c;
+  --danger: #b84848;
+  --ok: #2d8f4d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background:
+    radial-gradient(circle at 12% 14%, rgba(255, 255, 255, 0.65), transparent 40%),
+    linear-gradient(150deg, #dbdbdb, #d0d0d0);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+#app {
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.play-root,
+.settings-root {
+  width: min(1500px, 100%);
+  margin: 0 auto;
+}
+
+.play-frame {
+  position: relative;
+  min-height: calc(100vh - 40px);
+  border-radius: 32px;
+  border: 3px solid var(--line);
+  background: linear-gradient(165deg, #f1f1f1, #e5e5e5);
+  padding: 26px 30px 30px;
+  box-shadow:
+    0 16px 40px rgba(18, 18, 18, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.menu-button {
+  position: absolute;
+  top: 22px;
+  left: 22px;
+  width: 58px;
+  height: 58px;
+  border-radius: 12px;
+  border: 2px solid var(--line);
+  background: #f5f5f5;
+  display: grid;
+  align-content: center;
+  gap: 7px;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.menu-button span {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.play-grid {
+  height: 100%;
+  margin-top: 58px;
+  display: grid;
+  grid-template-columns: 330px minmax(0, 1fr);
+  gap: 36px;
+}
+
+.left-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 44px;
+}
+
+.left-panel-toggle-btn {
+  display: none;
+}
+
+.cycle-zone {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+}
+
+.chord-card {
+  width: 100%;
+  border: 3px solid var(--line);
+  border-radius: 28px;
+  background: var(--panel);
+  padding: 18px 20px 14px;
+}
+
+.card-label {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: 0.04em;
+}
+
+.chord-name {
+  margin: 12px 0 6px;
+  font-size: 86px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.chord-name.pulse {
+  animation: chord-pulse 220ms ease;
+}
+
+.chord-notes {
+  margin: 0;
+  font-size: 30px;
+  font-family: Consolas, "Courier New", monospace;
+  letter-spacing: 0.03em;
+}
+
+.play-hint {
+  margin: 16px 0 6px;
+  font-size: 18px;
+  color: #313131;
+  line-height: 1.45;
+}
+
+.play-hint:empty {
+  display: none;
+}
+
+.audio-status {
+  margin: 0;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.arpeggio-panel {
+  margin-top: 10px;
+  border-top: 1px solid rgba(35, 35, 35, 0.24);
+  padding-top: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.arpeggio-title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.arpeggio-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.arpeggio-status {
+  font-weight: 600;
+}
+
+.setting-line.arpeggio-line {
+  margin-bottom: 4px;
+}
+
+.arpeggio-select {
+  width: 160px;
+}
+
+.arpeggio-step-input {
+  width: 96px;
+}
+
+.cycle-button {
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  border: 3px solid var(--line);
+  background: radial-gradient(circle at 34% 25%, #ffffff, #dfdfdf 72%);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 8px 22px rgba(20, 20, 20, 0.12);
+}
+
+.cycle-button:active {
+  transform: scale(0.98);
+}
+
+.cycle-key {
+  font-size: 110px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.strings-panel {
+  min-width: 0;
+  border: 3px solid var(--line);
+  border-radius: 28px;
+  background: linear-gradient(180deg, #f8f8f8, #ededed);
+  padding: 14px 18px 14px 6px;
+}
+
+.string-board {
+  height: 100%;
+  min-height: 620px;
+  display: grid;
+  grid-template-rows: repeat(6, 1fr);
+  touch-action: none;
+}
+
+.string-row {
+  border: 0;
+  width: 100%;
+  background: none;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 80px;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.string-number {
+  font-size: 52px;
+  text-align: right;
+  line-height: 1;
+  font-family: "Comic Sans MS", "Segoe UI", sans-serif;
+}
+
+.string-line {
+  width: 100%;
+  height: var(--string-size);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #1f1f1f, #404040);
+  box-shadow: 0 0 0 1px rgba(25, 25, 25, 0.12);
+}
+
+.string-note {
+  text-align: right;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 24px;
+  color: #3e3e3e;
+}
+
+.string-row.active .string-line {
+  animation: pluck 180ms ease;
+}
+
+.settings-shell {
+  border-radius: 24px;
+  border: 3px solid var(--line);
+  background: linear-gradient(165deg, #f2f2f2, #e6e6e6);
+  padding: 20px 20px 24px;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.settings-header h1 {
+  margin: 0;
+  font-size: 30px;
+}
+
+.back-button {
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: #f8f8f8;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.settings-subtitle {
+  margin: 10px 0 4px;
+  color: var(--muted);
+}
+
+.settings-card {
+  margin-top: 14px;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  background: #f9f9f9;
+  padding: 14px;
+}
+
+.settings-card h2 {
+  margin: 0 0 10px;
+  font-size: 20px;
+}
+
+.setting-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.setting-line span {
+  flex: 1;
+}
+
+.setting-line-compact {
+  margin-bottom: 0;
+}
+
+.strum-settings-grid {
+  display: grid;
+  gap: 6px;
+}
+
+.strum-setting-title {
+  margin: 2px 0 0;
+  font-weight: 700;
+}
+
+.strum-override-list {
+  display: grid;
+  gap: 8px;
+}
+
+.string-override-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  justify-content: stretch;
+  column-gap: 10px;
+}
+
+.string-override-label {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 9ch 6ch minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 6px;
+}
+
+.string-override-string,
+.string-override-key,
+.string-override-delay-text {
+  white-space: nowrap;
+}
+
+.string-override-key {
+  font-family: Consolas, "Courier New", monospace;
+}
+
+.string-override-input {
+  width: 138px;
+  font-size: 14px;
+}
+
+.string-override-input::-webkit-outer-spin-button,
+.string-override-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.string-override-input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.string-override-input::placeholder {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.binding-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.key-input {
+  width: 96px;
+  text-align: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 2px solid var(--line);
+  background: #fff;
+  font-weight: 700;
+}
+
+.language-select {
+  width: 150px;
+}
+
+.key-select {
+  width: 220px;
+}
+
+.key-input:focus {
+  outline: 2px solid #6f8ecf;
+  outline-offset: 1px;
+}
+
+.chord-order-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.chord-order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 2px solid #2c2c2c;
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: #ffffff;
+}
+
+.item-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.item-actions .mini-btn {
+  min-width: 54px;
+  text-align: center;
+}
+
+.available-chords {
+  display: grid;
+  gap: 8px;
+}
+
+.available-chords-title {
+  margin: 0;
+}
+
+.available-chords-list {
+  display: grid;
+  gap: 8px;
+}
+
+.available-chord-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 2px solid #2c2c2c;
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: #fff;
+}
+
+.available-chord-row.unavailable {
+  border-color: #808080;
+  background: #f5f5f5;
+}
+
+.available-chord-meta {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.available-chord-name {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.available-chord-reason {
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.available-chord-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.mini-btn {
+  border: 2px solid #2d2d2d;
+  border-radius: 8px;
+  background: #f3f3f3;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.mini-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.mini-btn.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.mini-btn.add-btn {
+  margin: 0;
+}
+
+.available-chord-actions .add-btn {
+  margin: 0;
+}
+
+.arpeggio-settings-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.arpeggio-pattern-list {
+  display: grid;
+  gap: 8px;
+}
+
+.arpeggio-pattern-row {
+  border: 2px solid #2c2c2c;
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px 10px;
+  display: grid;
+  gap: 2px;
+}
+
+.arpeggio-pattern-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.arpeggio-pattern-main input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.arpeggio-pattern-name {
+  font-weight: 700;
+}
+
+.arpeggio-pattern-seq {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12px;
+}
+
+.guide-content p {
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.settings-footer {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.reset-btn {
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.setting-message {
+  font-size: 14px;
+}
+
+.setting-message[data-type="ok"] {
+  color: var(--ok);
+}
+
+.setting-message[data-type="warn"] {
+  color: #cc7c00;
+}
+
+.muted-text {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  padding: 2px 6px;
+  border: 1px solid #444;
+  border-radius: 6px;
+  background: #fff;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 13px;
+}
+
+@keyframes pluck {
+  0% {
+    transform: translateX(0);
+  }
+  35% {
+    transform: translateX(8px);
+  }
+  80% {
+    transform: translateX(-2px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes chord-pulse {
+  0% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 1220px) {
+  .play-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .left-column {
+    align-items: flex-start;
+  }
+
+  .chord-card {
+    max-width: 460px;
+  }
+
+  .cycle-button {
+    width: 180px;
+    height: 180px;
+  }
+
+  .cycle-key {
+    font-size: 90px;
+  }
+
+  .string-board {
+    min-height: 460px;
+  }
+}
+
+@media (max-width: 760px),
+  (max-width: 1366px) and (hover: none) and (pointer: coarse) {
+  #app {
+    padding: 12px;
+  }
+
+  .play-frame {
+    padding: 18px 14px 16px;
+    border-radius: 22px;
+  }
+
+  .menu-button {
+    top: 14px;
+    left: 14px;
+    width: 46px;
+    height: 46px;
+  }
+
+  .play-grid {
+    margin-top: 46px;
+  }
+
+  .chord-card {
+    border-radius: 20px;
+    padding: 14px;
+  }
+
+  .card-label {
+    font-size: 20px;
+  }
+
+  .chord-name {
+    font-size: 62px;
+  }
+
+  .chord-notes {
+    font-size: 20px;
+  }
+
+  .play-hint {
+    font-size: 15px;
+  }
+
+  .cycle-button {
+    width: 148px;
+    height: 148px;
+  }
+
+  .cycle-key {
+    font-size: 72px;
+  }
+
+  .strings-panel {
+    border-radius: 20px;
+    padding-right: 12px;
+  }
+
+  .string-row {
+    grid-template-columns: 42px minmax(0, 1fr) 54px;
+    gap: 8px;
+  }
+
+  .string-number {
+    font-size: 34px;
+  }
+
+  .string-note {
+    font-size: 14px;
+  }
+
+  .settings-shell {
+    border-radius: 18px;
+    padding: 14px;
+  }
+
+  .settings-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .settings-header h1 {
+    font-size: 24px;
+  }
+
+  .available-chord-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .chord-order-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .item-actions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .item-actions .mini-btn {
+    width: 100%;
+    min-height: 42px;
+    padding: 4px 0;
+  }
+
+  .available-chord-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .available-chord-actions .mini-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .arpeggio-pattern-row {
+    padding: 8px;
+  }
+
+  .arpeggio-pattern-name {
+    font-size: 14px;
+  }
+
+  .arpeggio-pattern-seq {
+    font-size: 11px;
+    overflow-wrap: anywhere;
+  }
+
+  .arpeggio-select {
+    width: 138px;
+  }
+
+  .arpeggio-step-input {
+    width: 88px;
+  }
+}
+
+@media (max-width: 600px) {
+  .string-override-label {
+    grid-template-columns: 7ch 4ch minmax(0, 1fr);
+    column-gap: 4px;
+    font-size: 14px;
+  }
+
+  .string-override-input {
+    width: 122px;
+    font-size: 13px;
+  }
+
+  .string-override-input::placeholder {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 960px),
+  (max-width: 1366px) and (hover: none) and (pointer: coarse) {
+  body.route-play,
+  body.route-play #app {
+    height: 100dvh;
+    min-height: 100dvh;
+  }
+
+  body.route-play {
+    overflow: hidden;
+  }
+
+  body.route-play #app {
+    padding: 8px;
+  }
+
+  body.route-play .play-root {
+    width: 100%;
+    height: 100%;
+  }
+
+  body.route-play .play-frame {
+    min-height: 0;
+    height: 100%;
+    border-radius: 18px;
+    padding: 12px 10px 10px;
+  }
+
+  body.route-play .menu-button {
+    top: 10px;
+    left: 10px;
+    width: 40px;
+    height: 40px;
+    gap: 4px;
+    padding: 7px;
+  }
+
+  body.route-play .menu-button span {
+    height: 3px;
+  }
+
+  body.route-play .play-grid {
+    margin-top: 42px;
+    height: calc(100% - 42px);
+    gap: 10px;
+  }
+
+  body.route-play .left-column {
+    gap: 10px;
+  }
+
+  body.route-play .chord-card {
+    border-radius: 16px;
+    padding: 11px 12px 10px;
+  }
+
+  body.route-play .strings-panel {
+    border-radius: 16px;
+    padding: 10px 10px 10px 6px;
+  }
+
+  body.route-play .string-board {
+    min-height: 0;
+    height: 100%;
+  }
+
+  body.route-play .string-row {
+    grid-template-columns: 30px minmax(0, 1fr) 50px;
+    gap: 6px;
+  }
+
+  body.route-play .string-number {
+    font-size: 32px;
+  }
+
+  body.route-play .string-note {
+    font-size: 12px;
+  }
+
+}
+
+@media (max-width: 960px) and (orientation: portrait),
+  (max-width: 1366px) and (hover: none) and (pointer: coarse) and (orientation: portrait) {
+  body.route-play .play-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  body.route-play .left-column {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  body.route-play .chord-card {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+
+  body.route-play .card-label {
+    font-size: 16px;
+  }
+
+  body.route-play .chord-name {
+    margin: 6px 0 2px;
+    font-size: 54px;
+  }
+
+  body.route-play .chord-notes {
+    font-size: 16px;
+    line-height: 1.2;
+  }
+
+  body.route-play .play-hint {
+    margin: 8px 0 4px;
+    font-size: 12px;
+    line-height: 1.3;
+  }
+
+  body.route-play .audio-status {
+    font-size: 11px;
+  }
+
+  body.route-play .cycle-button {
+    width: clamp(92px, 27vw, 120px);
+    height: clamp(92px, 27vw, 120px);
+    flex: 0 0 auto;
+    align-self: center;
+  }
+
+  body.route-play .cycle-key {
+    font-size: clamp(44px, 11vw, 64px);
+  }
+}
+
+@media (max-width: 960px) and (orientation: landscape),
+  (max-width: 1366px) and (hover: none) and (pointer: coarse) and (orientation: landscape) {
+  body.route-play .play-grid {
+    grid-template-columns: minmax(220px, 38%) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  body.route-play .left-column {
+    min-height: 0;
+    align-items: center;
+    gap: 8px;
+  }
+
+  body.route-play .chord-card {
+    width: 100%;
+    flex: 1 1 auto;
+    border-radius: 14px;
+    padding: 10px 10px 8px;
+  }
+
+  body.route-play .card-label {
+    font-size: 14px;
+  }
+
+  body.route-play .chord-name {
+    margin: 4px 0 2px;
+    font-size: 48px;
+  }
+
+  body.route-play .chord-notes {
+    font-size: 14px;
+    line-height: 1.12;
+  }
+
+  body.route-play .play-hint {
+    margin: 6px 0 2px;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+
+  body.route-play .audio-status {
+    font-size: 10px;
+  }
+
+  body.route-play .arpeggio-panel {
+    margin-top: 8px;
+    padding-top: 8px;
+    gap: 4px;
+  }
+
+  body.route-play .arpeggio-title {
+    font-size: 12px;
+  }
+
+  body.route-play .arpeggio-status {
+    font-size: 11px;
+  }
+
+  body.route-play .arpeggio-select {
+    width: 110px;
+  }
+
+  body.route-play .arpeggio-step-input {
+    width: 74px;
+  }
+
+  body.route-play .cycle-button {
+    width: clamp(84px, 22vh, 112px);
+    height: clamp(84px, 22vh, 112px);
+    align-self: center;
+  }
+
+  body.route-play .cycle-key {
+    font-size: clamp(40px, 10vh, 56px);
+  }
+
+  body.route-play .strings-panel {
+    border-radius: 14px;
+    padding-right: 8px;
+  }
+
+  body.route-play .string-row {
+    grid-template-columns: 28px minmax(0, 1fr) 44px;
+  }
+
+  body.route-play .string-number {
+    font-size: 28px;
+  }
+
+  body.route-play .string-note {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 960px),
+  (max-width: 1366px) and (hover: none) and (pointer: coarse) {
+  body.route-play .play-grid.play-grid-drawer {
+    position: relative;
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .strings-panel {
+    grid-column: 1;
+    grid-row: 1;
+    height: 100%;
+    min-height: 0;
+    padding: 8px 8px 8px 6px;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .string-board {
+    min-height: 0;
+    height: 100%;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .left-column {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 4;
+    width: min(82vw, 320px);
+    height: 100%;
+    min-height: 0;
+    align-items: stretch;
+    gap: 10px;
+    padding: 8px 8px 12px;
+    border: 2px solid var(--line);
+    border-radius: 16px;
+    background: linear-gradient(165deg, rgba(246, 246, 246, 0.98), rgba(233, 233, 233, 0.97));
+    box-shadow: 0 8px 24px rgba(20, 20, 20, 0.2);
+    overflow-y: auto;
+    transform: translateX(0);
+    transition: transform 180ms ease-out;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .left-column.collapsed {
+    transform: translateX(calc(-100% + 34px));
+  }
+
+  body.route-play .play-grid.play-grid-drawer .left-panel-toggle-btn {
+    display: inline-flex;
+    position: absolute;
+    top: 10px;
+    right: 8px;
+    z-index: 2;
+    width: 28px;
+    height: 38px;
+    padding: 0;
+    border-radius: 10px;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1;
+    background: #f7f7f7;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .chord-card {
+    width: 100%;
+    margin-top: 0;
+    padding-top: 42px;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .cycle-zone {
+    width: 100%;
+    min-height: 0;
+    flex: 0 0 auto;
+    padding-bottom: 4px;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .cycle-button {
+    width: clamp(88px, 24vw, 132px);
+    height: clamp(88px, 24vw, 132px);
+  }
+
+  body.route-play .play-grid.play-grid-drawer .cycle-key {
+    font-size: clamp(40px, 10vw, 64px);
+  }
+
+  body.route-play .play-grid.play-grid-drawer .arpeggio-panel {
+    margin-top: 8px;
+    padding-top: 8px;
+    gap: 6px;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .arpeggio-head {
+    flex-wrap: wrap;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .setting-line.arpeggio-line {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 4px;
+    margin-bottom: 2px;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .arpeggio-select,
+  body.route-play .play-grid.play-grid-drawer .arpeggio-step-input {
+    width: 100%;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .string-row {
+    grid-template-columns: 28px minmax(0, 1fr) 42px;
+    gap: 6px;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .string-number {
+    font-size: clamp(26px, 5.8vw, 34px);
+  }
+
+  body.route-play .play-grid.play-grid-drawer .string-note {
+    font-size: clamp(10px, 2.6vw, 13px);
+  }
+}
+
+@media (max-width: 960px) and (orientation: portrait),
+  (max-width: 1366px) and (hover: none) and (pointer: coarse) and (orientation: portrait) {
+  body.route-play .play-grid.play-grid-drawer .left-column {
+    width: min(88vw, 360px);
+  }
+}
+
+@media (max-width: 960px) and (orientation: landscape),
+  (max-width: 1366px) and (hover: none) and (pointer: coarse) and (orientation: landscape) {
+  body.route-play .play-grid.play-grid-drawer .left-column {
+    width: min(46vw, 300px);
+    border-radius: 14px;
+    padding: 6px 6px 10px;
+    gap: 8px;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .left-panel-toggle-btn {
+    top: 8px;
+    right: 6px;
+    width: 26px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .chord-card {
+    border-radius: 12px;
+    padding: 34px 8px 8px;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .card-label {
+    font-size: 14px;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .chord-name {
+    margin: 4px 0 2px;
+    font-size: 42px;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .chord-notes {
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .play-hint {
+    margin: 6px 0 2px;
+    font-size: 11px;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .audio-status {
+    font-size: 10px;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .arpeggio-title {
+    font-size: 12px;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .arpeggio-status {
+    font-size: 11px;
+  }
+
+  body.route-play .play-grid.play-grid-drawer .mini-btn {
+    padding: 2px 6px;
+  }
+}
+
+@media (min-width: 961px) and (hover: hover) and (pointer: fine) {
+  body.route-play {
+    --desktop-play-pad: clamp(10px, 1.3vw, 20px);
+    --desktop-menu-size: clamp(44px, 4.2vmin, 58px);
+    --desktop-menu-gap: clamp(4px, 0.5vmin, 7px);
+    --desktop-menu-pad: clamp(7px, 0.9vmin, 10px);
+    --desktop-menu-inset: clamp(10px, 1.4vmin, 22px);
+    --desktop-grid-top: calc(var(--desktop-menu-size) + clamp(4px, 0.8vmin, 10px));
+    --desktop-left-col-width: clamp(250px, 24vw, 330px);
+    --desktop-gap: clamp(14px, 2.3vmin, 36px);
+  }
+
+  body.route-play,
+  body.route-play #app {
+    height: 100vh;
+    min-height: 100vh;
+    height: 100dvh;
+    min-height: 100dvh;
+  }
+
+  body.route-play {
+    overflow: hidden;
+  }
+
+  body.route-play #app {
+    padding: var(--desktop-play-pad);
+  }
+
+  body.route-play .play-root {
+    width: min(1700px, 100%);
+    height: 100%;
+  }
+
+  body.route-play .play-frame {
+    min-height: 0;
+    height: 100%;
+    border-radius: clamp(20px, 2.8vmin, 32px);
+    padding:
+      clamp(14px, 1.8vmin, 26px)
+      clamp(16px, 2.1vmin, 30px)
+      clamp(14px, 1.8vmin, 30px);
+  }
+
+  body.route-play .menu-button {
+    top: var(--desktop-menu-inset);
+    left: var(--desktop-menu-inset);
+    width: var(--desktop-menu-size);
+    height: var(--desktop-menu-size);
+    gap: var(--desktop-menu-gap);
+    padding: var(--desktop-menu-pad);
+  }
+
+  body.route-play .menu-button span {
+    height: clamp(2px, 0.35vmin, 4px);
+  }
+
+  body.route-play .play-grid {
+    margin-top: var(--desktop-grid-top);
+    height: calc(100% - var(--desktop-grid-top));
+    grid-template-columns: var(--desktop-left-col-width) minmax(0, 1fr);
+    gap: var(--desktop-gap);
+  }
+
+  body.route-play .left-column {
+    min-height: 0;
+    gap: clamp(12px, 2.1vmin, 44px);
+  }
+
+  body.route-play .chord-card {
+    border-radius: clamp(18px, 2.4vmin, 28px);
+    padding:
+      clamp(12px, 1.6vmin, 18px)
+      clamp(14px, 1.8vmin, 20px)
+      clamp(10px, 1.3vmin, 14px);
+  }
+
+  body.route-play .card-label {
+    font-size: clamp(20px, 2.9vmin, 28px);
+  }
+
+  body.route-play .chord-name {
+    margin: clamp(6px, 1.2vmin, 12px) 0 clamp(2px, 0.7vmin, 6px);
+    font-size: clamp(52px, 8.2vmin, 86px);
+  }
+
+  body.route-play .chord-notes {
+    font-size: clamp(18px, 2.9vmin, 30px);
+  }
+
+  body.route-play .play-hint {
+    margin: clamp(8px, 1.4vmin, 16px) 0 clamp(2px, 0.8vmin, 6px);
+    font-size: clamp(12px, 1.8vmin, 18px);
+    line-height: 1.35;
+  }
+
+  body.route-play .audio-status {
+    font-size: clamp(11px, 1.4vmin, 15px);
+  }
+
+  body.route-play .arpeggio-panel {
+    margin-top: clamp(6px, 1.1vmin, 10px);
+    padding-top: clamp(6px, 1.1vmin, 10px);
+    gap: clamp(4px, 0.8vmin, 6px);
+  }
+
+  body.route-play .arpeggio-title {
+    font-size: clamp(12px, 1.6vmin, 15px);
+  }
+
+  body.route-play .arpeggio-head {
+    gap: clamp(6px, 0.9vmin, 8px);
+  }
+
+  body.route-play .setting-line.arpeggio-line {
+    margin-bottom: clamp(2px, 0.6vmin, 4px);
+  }
+
+  body.route-play .arpeggio-select {
+    width: clamp(122px, 11.8vw, 160px);
+  }
+
+  body.route-play .arpeggio-step-input {
+    width: clamp(74px, 7.1vw, 96px);
+  }
+
+  body.route-play .cycle-button {
+    width: clamp(112px, 18vmin, 220px);
+    height: clamp(112px, 18vmin, 220px);
+  }
+
+  body.route-play .cycle-key {
+    font-size: clamp(56px, 10.5vmin, 110px);
+  }
+
+  body.route-play .strings-panel {
+    min-height: 0;
+    border-radius: clamp(18px, 2.4vmin, 28px);
+    padding:
+      clamp(10px, 1.4vmin, 14px)
+      clamp(10px, 1.8vmin, 18px)
+      clamp(10px, 1.4vmin, 14px)
+      clamp(6px, 0.9vmin, 8px);
+  }
+
+  body.route-play .string-board {
+    min-height: 0;
+    height: 100%;
+  }
+
+  body.route-play .string-row {
+    grid-template-columns:
+      clamp(34px, 4.8vmin, 56px)
+      minmax(0, 1fr)
+      clamp(52px, 6.8vmin, 80px);
+    gap: clamp(8px, 1.2vmin, 12px);
+  }
+
+  body.route-play .string-number {
+    font-size: clamp(30px, 7vmin, 52px);
+  }
+
+  body.route-play .string-note {
+    font-size: clamp(14px, 3.2vmin, 24px);
+  }
+}

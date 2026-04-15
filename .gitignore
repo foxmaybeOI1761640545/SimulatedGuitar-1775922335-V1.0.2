@@ -1,0 +1,7 @@
+node_modules
+dist
+.DS_Store
+.pages-tmp-*
+
+# Manual testing artifacts
+docs/_artifacts/
