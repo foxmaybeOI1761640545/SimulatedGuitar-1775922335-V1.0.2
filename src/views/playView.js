@@ -11,6 +11,7 @@ function bindPlayRefs(refs) {
   refs.arpeggioPatternSelect = document.getElementById("arpeggioPatternSelect");
   refs.arpeggioStepInput = document.getElementById("arpeggioStepInput");
   refs.arpeggioImmediatePauseCheckbox = document.getElementById("arpeggioImmediatePauseCheckbox");
+  refs.arpeggioImmediateChordSwitchCheckbox = document.getElementById("arpeggioImmediateChordSwitchCheckbox");
   refs.cycleButton = document.getElementById("cycleButton");
   refs.cycleButtonKey = document.getElementById("cycleButtonKey");
   refs.stringBoard = document.getElementById("stringBoard");
@@ -24,6 +25,7 @@ function bindPlayEvents(refs, handlers) {
   refs.arpeggioPatternSelect?.addEventListener("change", handlers.onArpeggioPatternChange);
   refs.arpeggioStepInput?.addEventListener("change", handlers.onArpeggioStepChange);
   refs.arpeggioImmediatePauseCheckbox?.addEventListener("change", handlers.onArpeggioImmediatePauseChange);
+  refs.arpeggioImmediateChordSwitchCheckbox?.addEventListener("change", handlers.onArpeggioImmediateChordSwitchChange);
 
   refs.stringBoard?.addEventListener("pointerdown", handlers.onStringBoardPointerDown);
   refs.stringBoard?.addEventListener("pointermove", handlers.onStringBoardPointerMove);
@@ -91,6 +93,14 @@ function renderPlayView({
                 <label class="setting-line arpeggio-line" for="arpeggioImmediatePauseCheckbox">
                   <span>${t("arpeggioImmediatePauseLabel")}</span>
                   <input id="arpeggioImmediatePauseCheckbox" type="checkbox" ${state.arpeggioPauseImmediate ? "checked" : ""} />
+                </label>
+                <label class="setting-line arpeggio-line" for="arpeggioImmediateChordSwitchCheckbox">
+                  <span>${t("arpeggioImmediateChordSwitchLabel")}</span>
+                  <input
+                    id="arpeggioImmediateChordSwitchCheckbox"
+                    type="checkbox"
+                    ${state.arpeggioChordSwitchImmediate ? "checked" : ""}
+                  />
                 </label>
                 <p class="muted-text">${t("arpeggioHint", { key: `<kbd>${formatKeyLabel(arpeggioToggleKey)}</kbd>` })}</p>
               </div>

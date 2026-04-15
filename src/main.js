@@ -12,6 +12,7 @@ import {
   CHORD_LIBRARY,
   CHORD_VOICING_MODE_GUITAR,
   CHORD_VOICING_MODE_TRANSPOSE,
+  DEFAULT_ARPEGGIO_CHORD_SWITCH_IMMEDIATE,
   DEFAULT_ARPEGGIO_PAUSE_IMMEDIATE,
   DEFAULT_ARPEGGIO_PATTERN_ID,
   DEFAULT_ARPEGGIO_STEP_MS,
@@ -92,6 +93,7 @@ let arpeggioIntervalId = null;
 let arpeggioStepCursor = 0;
 let arpeggioLastChordId = null;
 let arpeggioStopPending = false;
+let arpeggioPendingChordIndex = null;
 const app = document.querySelector("#app");
 
 if (!app) {
@@ -171,6 +173,7 @@ function renderPlayPage() {
       onArpeggioPatternChange: handleArpeggioPatternChange,
       onArpeggioStepChange: handleArpeggioStepChange,
       onArpeggioImmediatePauseChange: handleArpeggioImmediatePauseChange,
+      onArpeggioImmediateChordSwitchChange: handleArpeggioImmediateChordSwitchChange,
       onStringBoardPointerDown: handleStringBoardPointerDown,
       onStringBoardPointerMove: handleStringBoardPointerMove,
       onStringBoardPointerEnd: handleStringBoardPointerEnd
@@ -368,6 +371,9 @@ function renderArpeggioControls() {
   if (refs.arpeggioImmediatePauseCheckbox instanceof HTMLInputElement) {
     refs.arpeggioImmediatePauseCheckbox.checked = state.arpeggioPauseImmediate;
   }
+  if (refs.arpeggioImmediateChordSwitchCheckbox instanceof HTMLInputElement) {
+    refs.arpeggioImmediateChordSwitchCheckbox.checked = state.arpeggioChordSwitchImmediate;
+  }
 }
 
 function isCompactPlayLayout() {
@@ -462,6 +468,31 @@ function stopArpeggioPlayback() {
   }
 }
 
+function normalizePendingArpeggioChordIndex() {
+  if (!Number.isInteger(arpeggioPendingChordIndex)) {
+    return null;
+  }
+  if (state.sequence.length === 0) {
+    return null;
+  }
+  return Math.min(Math.max(arpeggioPendingChordIndex, 0), state.sequence.length - 1);
+}
+
+function applyPendingArpeggioChordSwitch() {
+  const nextIndex = normalizePendingArpeggioChordIndex();
+  arpeggioPendingChordIndex = null;
+  if (!Number.isInteger(nextIndex) || nextIndex === state.currentIndex) {
+    return;
+  }
+
+  state.currentIndex = nextIndex;
+  saveSettings();
+  renderCurrentChord();
+  renderStringBoard();
+  renderPlayHint();
+  pulseChordName();
+}
+
 function requestArpeggioStop(options = {}) {
   const { showMessage = false } = options;
   if (!state.arpeggioEnabled) {
@@ -503,10 +534,14 @@ function triggerArpeggioStep() {
   }
 
   const stepPosition = arpeggioStepCursor % stepSequence.length;
-  const stopAfterCurrentStep = arpeggioStopPending && stepPosition === stepSequence.length - 1;
+  const phraseEnded = stepPosition === stepSequence.length - 1;
+  const stopAfterCurrentStep = arpeggioStopPending && phraseEnded;
   const stringNo = stepSequence[stepPosition];
   arpeggioStepCursor += 1;
   if (!STRING_ORDER.includes(stringNo)) {
+    if (phraseEnded) {
+      applyPendingArpeggioChordSwitch();
+    }
     if (stopAfterCurrentStep) {
       setArpeggioEnabled(false, { showMessage: false });
     }
@@ -515,6 +550,9 @@ function triggerArpeggioStep() {
 
   const note = getStringNote(chord, stringNo);
   if (!note) {
+    if (phraseEnded) {
+      applyPendingArpeggioChordSwitch();
+    }
     if (stopAfterCurrentStep) {
       setArpeggioEnabled(false, { showMessage: false });
     }
@@ -533,6 +571,9 @@ function triggerArpeggioStep() {
     noteDurationSeconds,
     highlightDurationMs
   );
+  if (phraseEnded) {
+    applyPendingArpeggioChordSwitch();
+  }
   if (stopAfterCurrentStep) {
     setArpeggioEnabled(false, { showMessage: false });
   }
@@ -550,6 +591,7 @@ async function startArpeggioPlayback() {
     return;
   }
 
+  arpeggioPendingChordIndex = null;
   arpeggioStepCursor = 0;
   arpeggioLastChordId = getCurrentChord();
   triggerArpeggioStep();
@@ -575,6 +617,7 @@ function setArpeggioEnabled(nextEnabled, options = {}) {
     return;
   }
 
+  arpeggioPendingChordIndex = null;
   arpeggioStopPending = false;
   state.arpeggioEnabled = normalized;
   saveSettings();
@@ -662,6 +705,25 @@ function handleArpeggioImmediatePauseChange(event) {
   }
 
   state.arpeggioPauseImmediate = nextValue;
+  saveSettings();
+  renderArpeggioControls();
+}
+
+function handleArpeggioImmediateChordSwitchChange(event) {
+  const input = event.target;
+  if (!(input instanceof HTMLInputElement) || input.id !== "arpeggioImmediateChordSwitchCheckbox") {
+    return;
+  }
+
+  const nextValue = Boolean(input.checked);
+  if (nextValue === state.arpeggioChordSwitchImmediate) {
+    return;
+  }
+
+  state.arpeggioChordSwitchImmediate = nextValue;
+  if (nextValue) {
+    arpeggioPendingChordIndex = null;
+  }
   saveSettings();
   renderArpeggioControls();
 }
@@ -969,6 +1031,17 @@ function normalizeSequenceState() {
 
 function cycleChord() {
   normalizeSequenceState();
+  const shouldQueueSwitch =
+    state.arpeggioEnabled &&
+    getRoute() === ROUTE_PLAY &&
+    !state.arpeggioChordSwitchImmediate;
+  if (shouldQueueSwitch) {
+    const baseIndex = normalizePendingArpeggioChordIndex() ?? state.currentIndex;
+    arpeggioPendingChordIndex = (baseIndex + 1) % state.sequence.length;
+    return;
+  }
+
+  arpeggioPendingChordIndex = null;
   state.currentIndex = (state.currentIndex + 1) % state.sequence.length;
   saveSettings();
   renderCurrentChord();
@@ -2439,6 +2512,7 @@ function handleReset() {
   state.arpeggioVisiblePatternIds = [...DEFAULT_ARPEGGIO_VISIBLE_PATTERN_IDS];
   state.arpeggioStepMs = DEFAULT_ARPEGGIO_STEP_MS;
   state.arpeggioPauseImmediate = DEFAULT_ARPEGGIO_PAUSE_IMMEDIATE;
+  state.arpeggioChordSwitchImmediate = DEFAULT_ARPEGGIO_CHORD_SWITCH_IMMEDIATE;
   state.leftPanelCollapsed = true;
   state.strumHoldDelayMs = DEFAULT_STRUM_HOLD_DELAY_MS;
   state.stringHoldDelayMs = DEFAULT_STRING_HOLD_DELAY_MS;
@@ -2446,6 +2520,7 @@ function handleReset() {
 
   stopArpeggioPlayback();
   arpeggioStopPending = false;
+  arpeggioPendingChordIndex = null;
   saveSettings();
   renderSettingsContent();
   renderPlayHint();

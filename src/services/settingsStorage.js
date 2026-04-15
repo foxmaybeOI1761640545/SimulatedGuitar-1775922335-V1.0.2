@@ -23,6 +23,7 @@ function buildSettingsPayload(state) {
     arpeggioVisiblePatternIds: state.arpeggioVisiblePatternIds,
     arpeggioStepMs: state.arpeggioStepMs,
     arpeggioPauseImmediate: state.arpeggioPauseImmediate,
+    arpeggioChordSwitchImmediate: state.arpeggioChordSwitchImmediate,
     leftPanelCollapsed: state.leftPanelCollapsed,
     strumHoldDelayMs: state.strumHoldDelayMs,
     stringHoldDelayMs: state.stringHoldDelayMs,
@@ -142,6 +143,10 @@ function loadSettingsFromStorage(
 
     if (typeof parsed.arpeggioPauseImmediate === "boolean") {
       state.arpeggioPauseImmediate = parsed.arpeggioPauseImmediate;
+    }
+
+    if (typeof parsed.arpeggioChordSwitchImmediate === "boolean") {
+      state.arpeggioChordSwitchImmediate = parsed.arpeggioChordSwitchImmediate;
     }
 
     if (typeof parsed.leftPanelCollapsed === "boolean") {

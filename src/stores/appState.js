@@ -1,4 +1,5 @@
 import {
+  DEFAULT_ARPEGGIO_CHORD_SWITCH_IMMEDIATE,
   DEFAULT_ARPEGGIO_PAUSE_IMMEDIATE,
   DEFAULT_ARPEGGIO_PATTERN_ID,
   DEFAULT_ARPEGGIO_STEP_MS,
@@ -30,6 +31,7 @@ function createAppState() {
     arpeggioVisiblePatternIds: [...DEFAULT_ARPEGGIO_VISIBLE_PATTERN_IDS],
     arpeggioStepMs: DEFAULT_ARPEGGIO_STEP_MS,
     arpeggioPauseImmediate: DEFAULT_ARPEGGIO_PAUSE_IMMEDIATE,
+    arpeggioChordSwitchImmediate: DEFAULT_ARPEGGIO_CHORD_SWITCH_IMMEDIATE,
     leftPanelCollapsed: true,
     strumHoldDelayMs: DEFAULT_STRUM_HOLD_DELAY_MS,
     stringHoldDelayMs: DEFAULT_STRING_HOLD_DELAY_MS,
